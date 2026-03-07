@@ -1,0 +1,8 @@
+olá, isso é um arquivo texto
+para
+testar o 
+arquivo copy.c, que mostra
+o conteudo de um 
+arquivo texto
+tipo o comando cat do linux...
+:D
