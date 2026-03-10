@@ -152,7 +152,7 @@ int my_ls(){
 void my_help(){
 
     printf("\x1b[1;39m=== COMANDOS DISPONÍVEIS ===\n\x1b[0m");
-    printf("\x1b[1;39mmycd\nmycwd\nmyls\nmymkdir\nmyrmdir\nmystat\n\x1b[0m");
+    printf("\x1b[1;39mmycd\nmycwd\nmyls\nmymkdir\nmyrmdir\nmystat\nmyclear\n\x1b[0m");
     printf("\x1b[1;39m============================\n\x1b[0m");
 
 }
@@ -180,6 +180,17 @@ char * corta_string(char path[]){
 
     // se nao tiver '/' no texto, retorno o proprio path
     return path;
+}
+
+// man clear
+// https://www.dedicatedcore.com/blog/clear-terminal-linux/
+void my_clear(){
+
+    printf("\033[3J\033[H\033[2J");
+    // \033[3J limpa scrollback
+    // \033[H desloca o cursor do terminal para cima
+    // \033[2J limpa texto visivel
+
 }
 
 int main(int argc, char **argv){
@@ -221,14 +232,16 @@ int main(int argc, char **argv){
         else if(strcmp(in, "myls") == 0)
             my_ls();
         
-        else if(strcmp(in, "help") == 0)
+        else if(strcmp(in, "myhelp") == 0)
             my_help();
-            
+        
+        else if(strcmp(in, "myclear") == 0)
+            my_clear();
+
         else {
 
             printf("\x1b[1;31m%s\x1b[0m: Comando inválido!\n", in);
-            printf("Digite \x1b[1;4;37mhelp\x1b[0m para ajuda ou \x1b[1;4;37mexit\x1b[0m para sair\n");
-
+            printf("Digite \x1b[1;4;37mmyhelp\x1b[0m para ajuda ou \x1b[1;4;37mexit\x1b[0m para sair\n");
 
         }
     }
