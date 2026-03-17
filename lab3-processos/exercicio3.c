@@ -12,9 +12,9 @@ até que o usuário digite sair.
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include<stdbool.h>
-#include<string.h>
-#include<ctype.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
 
 #define MAX 256
 
@@ -26,7 +26,7 @@ bool entrada_valida(char entrada[], bool* ecomercial){
     char *caminho = &entrada[0];
     *ecomercial = false; //assumo que nao tem &
 
-    int i = strlen(entrada);
+    int i = strlen(entrada) - 1;
     while(i >= 0){
 
         if(caminho[i] == '&'){
@@ -34,7 +34,7 @@ bool entrada_valida(char entrada[], bool* ecomercial){
             *ecomercial = true;
             
             i--;
-            while(caminho[i] == ' ') // remover espaços
+            while(i >= 0 && caminho[i] == ' ') // remover espaços
                 i--;
 
             caminho[++i] = '\0';
@@ -44,9 +44,9 @@ bool entrada_valida(char entrada[], bool* ecomercial){
         i--;
     }
 
-    // false: sem caminho e/ou sem &
-    // true: com caminho valido e com &
-    return caminho != NULL && (caminho[0] != '\0' || caminho[0] != "") && *ecomercial;
+    // false: caminho invalido
+    // true: com caminho valido
+    return caminho[0] != '\0';
 }
 
 int main(int argc, char** argv){
@@ -68,10 +68,29 @@ int main(int argc, char** argv){
         if(strcmp(entrada, "sair") == 0)
             break;
 
-        // neste ponto, entrada é diferente de "sair"
+        // neste ponto, a entrada é diferente de "sair"
         // e ja sabemos se tem ou nao tem '&'
 
-        
+        int pid, status;
+        pid = fork();
+
+        if(pid == -1){ // erro
+
+            perror("Erro PID");
+            exit(-1);
+
+        }
+        else if(pid == 0){ // filho
+
+            execve(entrada, NULL, NULL);
+            exit(1);
+        }
+        else {
+            
+            // se nao tem &, entao usa WAIT
+            if(!ecomercial)
+                wait(&status);
+        }
 
     }
 
