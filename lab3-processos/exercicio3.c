@@ -20,57 +20,56 @@ até que o usuário digite sair.
 
 bool entrada_valida(char entrada[], bool* ecomercial);
 
-// vou pegar a entrada, o que for caminho joga para A, se tiver & joga em B
+// vou analisar a entrada e verificar se tem '&' => modifica por referência
+// retorna:
+//      false: caminho invalido (string vazia)
+//      true: com caminho valido (string com pelo menos um caractere)
 bool entrada_valida(char entrada[], bool* ecomercial){
 
-    char *caminho = &entrada[0];
-    *ecomercial = false; //assumo que nao tem &
+    int i = strlen(entrada);
 
-    int i = strlen(entrada) - 1;
-    while(i >= 0){
+    if(i == 0) // string vazia
+        return false;
 
-        if(caminho[i] == '&'){
+    // se termina com & => ativa true em *ecomercial
+    // depois remove o '&'
+    // depois retira os espaços entre & e o caminho
+    // por fim a string 'entrada' é somente o diretorio
+    if(entrada[i - 1] == '&'){
 
-            *ecomercial = true;
-            
-            i--;
-            while(i >= 0 && caminho[i] == ' ') // remover espaços
-                i--;
+        *ecomercial = true;
+        entrada[i - 1] = '\0';
 
-            caminho[++i] = '\0';
-            break;
+        // decremento o i até encontrar o primeiro espaço a partir do caminho
+        for(i = strlen(entrada) - 1; i > 1 && entrada[i] == ' '; i--);
+        entrada[++i] = '\0';
 
-        }
-        i--;
     }
 
-    // false: caminho invalido
-    // true: com caminho valido
-    return caminho[0] != '\0';
+    return strlen(entrada) >= 1;
+
 }
 
 int main(int argc, char** argv){
 
-    char entrada[MAX];
-    bool ecomercial = false;
-
     while(true){
 
+        char entrada[MAX] = " ";
+        bool ecomercial = false; // suponho que inicialmente não há &
+        
         printf("> ");
         fgets(entrada, MAX, stdin);
-        entrada[strlen(entrada)-1] = '\0'; // remove a quebra de linha
-
-        // pegar a entrada com uma string apenas e separar com ponteiros
-
-        if(!entrada_valida(entrada, &ecomercial))
-            exit(-1);
+        entrada[strlen(entrada) - 1] = '\0'; // remove a quebra de linha
 
         if(strcmp(entrada, "sair") == 0)
             break;
 
+        // pegar a entrada com uma string apenas e separar com ponteiros
+        if(!entrada_valida(entrada, &ecomercial))
+            continue; // nao encerra
+
         // neste ponto, a entrada é diferente de "sair"
         // e ja sabemos se tem ou nao tem '&'
-
         int pid, status;
         pid = fork();
 
@@ -82,14 +81,26 @@ int main(int argc, char** argv){
         }
         else if(pid == 0){ // filho
 
-            execve(entrada, NULL, NULL);
+            char *newargv[] = { NULL };            
+            static char *newenviron[] = { NULL };
+            execve(entrada, newargv, newenviron);
+            perror("Erro no execve");
             exit(1);
+
         }
-        else {
+        else { // pai
             
-            // se nao tem &, entao usa WAIT
+            // se nao tem &, entao usa WAITPID
             if(!ecomercial)
-                wait(&status);
+                waitpid(pid, &status, 0);
+
+            /*
+            Obs.: eu estava utilizando o wait, porém quando eu aplicava:
+            /usr/bin/ls   => funcionava
+            /usr/bin/ls & => não funcionava
+            /usr/bin/ls   => comportamento era como se tivesse &
+            então usei o waitpid aguarda o filho cujo ID do processo é igual ao PID e funcionou
+            */
         }
 
     }
